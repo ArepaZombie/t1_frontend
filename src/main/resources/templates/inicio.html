@@ -8,6 +8,11 @@
 <body>
   <div class="container mb-3">
 
+    <div th:if="${mensaje != null}"
+         class="alert alert-warning">
+        <span th:text="${mensaje}"></span>
+    </div>
+
     <h1 class="m-5  text-center">HOT WHEELS</h1>
 
     <div class="container w-50 mx-auto border border-dark border-3 p-3">
