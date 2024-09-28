@@ -1,22 +1,26 @@
 package com.example.torresmora_t1_frontend.controller;
 
+import com.example.torresmora_t1_frontend.dto.RequestVehiculo;
+import com.example.torresmora_t1_frontend.dto.ResponseVehiculo;
 import com.example.torresmora_t1_frontend.viewmodel.VehiculoModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 
 @Controller
 @RequestMapping("/t1")
 public class VehiculoController {
 
-  @GetMapping("/inicio")
-  public String inicio(){
+  @Autowired
+  RestTemplate restTemplate;
 
-    return "inicio";
-  }
+  @GetMapping("/inicio")
+  public String inicio(){return "inicio";}
 
   @PostMapping("/buscar")
   public String buscar(@RequestParam("placa") String placa, Model model){
@@ -29,16 +33,36 @@ public class VehiculoController {
       return "inicio";
     }
 
+    try{
+      String url = "http://localhost:8081/t1/busqueda";
+      RequestVehiculo request = new RequestVehiculo(placa);
+      ResponseVehiculo response = restTemplate.postForObject(
+        url, request, ResponseVehiculo.class);
 
-    VehiculoModel vehiculo = new VehiculoModel(
-      "00","",
-      "B4T-MAN","Wayne","Batimovil","5","99999999","Negro"
-    );
+      if (response.codigo().equals("00")){
+        VehiculoModel vehiculo = new VehiculoModel(
+          "00","",
+          placa,response.marca(),
+          response.modelo(),
+          response.asientos(),
+          response.precio(),
+          response.color()
+        );
+        model.addAttribute("vehiculo",vehiculo);
+        return "resultado";
+      }else {
+        model.addAttribute("mensaje",
+          response.mensaje());
+        return "inicio";
+      }
 
-    model.addAttribute("vehiculo",vehiculo);
-    return "resultado";
+    } catch (Exception e) {
+      model.addAttribute("mensaje",
+        "Hubo un error del servidor");
+      System.out.println("ERROR: "+e.getMessage());
+      return "inicio";
+    }
 
   }
-
 
 }
